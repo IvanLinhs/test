@@ -4,7 +4,9 @@ if [ $# != 1 ]; then
   echo "./install_px2.sh [a|b]"
   exit 1;
 fi
-  
+
+sudo rm /etc/hosts
+sudo echo "127.0.0.1" >> /etc/hosts
 sudo echo "10.42.0.28 tegra-a" >> /etc/hosts
 sudo echo "10.42.0.29 tegra-b" >> /etc/hosts
 
@@ -28,21 +30,34 @@ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C
 sudo apt-get -y install libssl1.0.0/xenial libssl-doc/xenial libssl-dev/xenial
 sudo apt-get -y install ros-kinetic-desktop-full
 
+sudo apt-get -y install git ros-kinetic-joy ros-kinetic-robot-localization ros-kinetic-geodesy  python-skimage ros-kinetic-robot-localization ros-kinetic-geodesy libopencv-dev ros-kinetic-ompl ros-kinetic-base-local-planner ros-kinetic-costmap-converter ros-kinetic-teb-local-planner  libgoogle-glog-dev libgflags-dev ros-kinetic-driver-base ros-kinetic-can-msgs
+
 echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
 echo "source ~/nullmax_pilot/devel/setup.bash" >> ~/.bashrc
 echo "export DW_MAJOR_VERSION=1" >> ~/.bashrc
 echo "export DW_MINOR_VERSION=2" >> ~/.bashrc
-echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
 
 if [ "$1" == "a" ]; then
   #tegra-a
+
+  echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
   echo "export ROS_IP=10.42.0.28" >> ~/.bashrc
-else
+
+  sudo rm /etc/hostname
+  sudo echo "tegra-a" >> /etc/hostname
+
+elif [ "$1" == "b"]; then
   #tegra-b
+  
+  echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
   echo "export ROS_IP=10.42.0.29" >> ~/.bashrc
   echo "cd ~/nullmax_pilot" >> ~/.bashrc
   echo "bash ./scripts/setup_canbus.sh 1" >> ~/.bashrc
   echo "roslaunch esr_mobileye_node esr_mobileye_node.launch " >> ~/.bashrc
+
+  sudo rm /etc/hostname
+  sudo echo "tegra-b" >> /etc/hostname
 fi
+
 
 
