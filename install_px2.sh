@@ -7,6 +7,7 @@ fi
 
 sudo rm /etc/hosts
 sudo echo "127.0.0.1" >> /etc/hosts
+sudo echo "127.0.1.1 tegra-ubuntu" >> /etc/hosts
 sudo echo "10.42.0.28 tegra-a" >> /etc/hosts
 sudo echo "10.42.0.29 tegra-b" >> /etc/hosts
 
@@ -31,6 +32,7 @@ sudo apt-get -y install libssl1.0.0/xenial libssl-doc/xenial libssl-dev/xenial
 sudo apt-get -y install ros-kinetic-desktop-full
 
 sudo apt-get -y install git ros-kinetic-joy ros-kinetic-robot-localization ros-kinetic-geodesy  python-skimage ros-kinetic-robot-localization ros-kinetic-geodesy libopencv-dev ros-kinetic-ompl ros-kinetic-base-local-planner ros-kinetic-costmap-converter ros-kinetic-teb-local-planner  libgoogle-glog-dev libgflags-dev ros-kinetic-driver-base ros-kinetic-can-msgs
+sudo apt-get -y install openssh-server
 
 echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
 echo "source ~/nullmax_pilot/devel/setup.bash" >> ~/.bashrc
@@ -42,6 +44,11 @@ if [ "$1" == "a" ]; then
 
   echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
   echo "export ROS_IP=10.42.0.28" >> ~/.bashrc
+
+  ssh-keygen -t rsa
+
+  cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+  scp ~/.ssh/authorized_keys ubuntu@tegra-b:~/.ssh/
 
   sudo rm /etc/hostname
   sudo echo "tegra-a" >> /etc/hostname
