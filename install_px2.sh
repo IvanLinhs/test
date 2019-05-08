@@ -2,13 +2,14 @@
 if [ $# != 1 ]; then
   echo "Usage: "
   echo "./install_px2.sh [a|b]"
+  exit
 fi
   
 sudo echo "10.42.0.28 tegra-a" >> /etc/hosts
 sudo echo "10.42.0.29 tegra-b" >> /etc/hosts
 
 sudo apt-get update
-sudo apt-get install apt-transport-https
+sudo apt-get -y install apt-transport-https
 
 sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
 sudo rm /etc/apt/sources.list
@@ -21,8 +22,8 @@ sudo sh -c '. /etc/lsb-release && echo "deb https://mirrors.ustc.edu.cn/ros/ubun
 sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
 sudo apt-get update
 
-sudo apt-get install libssl1.0.0/xenial libssl-doc/xenial libssl-dev/xenial
-sudo apt-get install ros-kinetic-desktop-full
+sudo apt-get -y install libssl1.0.0/xenial libssl-doc/xenial libssl-dev/xenial
+sudo apt-get -y install ros-kinetic-desktop-full
 
 echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
 echo "source ~/nullmax_pilot/devel/setup.bash" >> ~/.bashrc
