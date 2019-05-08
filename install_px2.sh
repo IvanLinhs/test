@@ -2,7 +2,7 @@
 if [ $# != 1 ]; then
   echo "Usage: "
   echo "./install_px2.sh [a|b]"
-  exit
+  exit 1;
 fi
   
 sudo echo "10.42.0.28 tegra-a" >> /etc/hosts
