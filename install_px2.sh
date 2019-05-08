@@ -46,7 +46,7 @@ if [ "$1" == "a" ]; then
   sudo rm /etc/hostname
   sudo echo "tegra-a" >> /etc/hostname
 
-elif [ "$1" == "b"]; then
+elif [ "$1" == "b" ]; then
   #tegra-b
   
   echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
