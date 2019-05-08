@@ -5,9 +5,9 @@ if [ $# != 1 ]; then
   exit 1;
 fi
 
-sudo rm /etc/hosts
-sudo echo "127.0.0.1" >> /etc/hosts
-sudo echo "127.0.1.1 tegra-ubuntu" >> /etc/hosts
+# sudo rm /etc/hosts
+# sudo echo "127.0.0.1" >> /etc/hosts
+# sudo echo "127.0.1.1 tegra-ubuntu" >> /etc/hosts
 sudo echo "10.42.0.28 tegra-a" >> /etc/hosts
 sudo echo "10.42.0.29 tegra-b" >> /etc/hosts
 
@@ -51,7 +51,9 @@ if [ "$1" == "a" ]; then
   scp ~/.ssh/authorized_keys ubuntu@tegra-b:~/.ssh/
 
   sudo rm /etc/hostname
+  sudo su
   sudo echo "tegra-a" >> /etc/hostname
+  command exit
 
 elif [ "$1" == "b" ]; then
   #tegra-b
@@ -63,7 +65,9 @@ elif [ "$1" == "b" ]; then
   echo "roslaunch esr_mobileye_node esr_mobileye_node.launch " >> ~/.bashrc
 
   sudo rm /etc/hostname
+  sudo su
   sudo echo "tegra-b" >> /etc/hostname
+  command exit
 fi
 
 
