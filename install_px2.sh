@@ -67,15 +67,16 @@ function edit_hostname(){
 
 # edit bashrc
 function edit_bash(){
-  
-  echo "source ~/nullmax_pilot/devel/setup.bash" >> ~/.bashrc
   echo "export DW_MAJOR_VERSION=1" >> ~/.bashrc
   echo "export DW_MINOR_VERSION=2" >> ~/.bashrc
+  echo "source ~/nullmax_pilot/devel/setup.bash" >> ~/.bashrc
+
 
   if [ "$1" == "a" ] ; then
     #tegra-a
     echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
     echo "export ROS_IP=10.42.0.28" >> ~/.bashrc
+    
   elif [ "$1" == "b" ]; then
     #tegra-b
     echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
