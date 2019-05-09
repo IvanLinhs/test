@@ -45,18 +45,22 @@ function init_ros(){
 
 # add hosts
 function add_hosts(){
-  sudo sed '/tegra-a/'d /etc/hosts
   sudo echo "10.42.0.28 tegra-a" >> /etc/hosts
-  sudo sed '/tegra-b/'d /etc/hosts
   sudo echo "10.42.0.29 tegra-b" >> /etc/hosts
+  cat /etc/hosts
 }
 
 # edit hostname
 function edit_hostname(){
   if [ "$1" == "a" ]; then
-    sudo sed 's/tegra-ubuntu/tegra-a/g' /etc/hostname
+    sudo echo "tegra-a" >> /etc/hostname
+    echo 'hostname:'
+    cat /etc/hostname
+
   elif [ "$1" == "b" ]; then
-    sudo sed 's/tegra-ubuntu/tegra-b/g' /etc/hostname
+    sudo echo "tegra-b" >> /etc/hostname
+    echo 'hostname:'
+    cat /etc/hostname
   fi
 }
 
