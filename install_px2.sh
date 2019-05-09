@@ -1,74 +1,76 @@
 #!/bin/bash
-if [ $# != 1 ]; then
+if [ $# != 5 ]; then
   echo "Usage: "
-  echo "./install_px2.sh [a|b]"
-  exit 1;
+  echo "./install_px2.sh [a|b] [install|no_install] [host|no_host] [ssh|no_ssh] [bash|no_bash]"
 fi
 
-# sudo rm /etc/hosts
-# sudo echo "127.0.0.1" >> /etc/hosts
-# sudo echo "127.0.1.1 tegra-ubuntu" >> /etc/hosts
-sudo echo "10.42.0.28 tegra-a" >> /etc/hosts
-sudo echo "10.42.0.29 tegra-b" >> /etc/hosts
+# edit sources.list and install all package
+if [ "$2" == "install"]; then
+  sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
+  sudo rm /etc/apt/sources.list
 
-#sudo apt-get update
-#sudo apt-get -y install apt-transport-https
+  sudo echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
+  sudo echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
+  sudo echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ xenial-backports main restricted universe multiverse" >> /etc/apt/sources.list
+  sudo echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
 
-sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
-sudo rm /etc/apt/sources.list
+  sudo sh -c '. /etc/lsb-release && echo "deb http://mirrors.ustc.edu.cn/ros/ubuntu/ $DISTRIB_CODENAME main" > /etc/apt/sources.list.d/ros-latest.list'
+                
+  sudo apt-get update
 
-sudo echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
-sudo echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
-sudo echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ xenial-backports main restricted universe multiverse" >> /etc/apt/sources.list
-sudo echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+  sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
 
-sudo sh -c '. /etc/lsb-release && echo "deb http://mirrors.ustc.edu.cn/ros/ubuntu/ $DISTRIB_CODENAME main" > /etc/apt/sources.list.d/ros-latest.list'
+  sudo apt-get -y install libssl1.0.0/xenial libssl-doc/xenial libssl-dev/xenial
+  sudo apt-get -y install ros-kinetic-desktop-full
 
-sudo apt-get update
+  sudo apt-get -y install git ros-kinetic-joy ros-kinetic-robot-localization ros-kinetic-geodesy  python-skimage ros-kinetic-robot-localization ros-kinetic-geodesy libopencv-dev ros-kinetic-ompl ros-kinetic-base-local-planner ros-kinetic-costmap-converter ros-kinetic-teb-local-planner  libgoogle-glog-dev libgflags-dev ros-kinetic-driver-base ros-kinetic-can-msgs
+  sudo apt-get -y install openssh-server
+fi
 
-sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+# edit hosts and hostname
+if [ "$3" == "host"]; then
+  sudo echo "10.42.0.28 tegra-a" >> /etc/hosts
+  sudo echo "10.42.0.29 tegra-b" >> /etc/hosts
 
-sudo apt-get -y install libssl1.0.0/xenial libssl-doc/xenial libssl-dev/xenial
-sudo apt-get -y install ros-kinetic-desktop-full
+  if [ "$1" == "a" ]; then
+    sudo rm /etc/hostname
+    sudo su
+    sudo echo "tegra-a" >> /etc/hostname
+    command exit
+  elif [ "$1" == "b" ]; then
+    sudo rm /etc/hostname
+    sudo su
+    sudo echo "tegra-b" >> /etc/hostname
+    command exit
+fi
 
-sudo apt-get -y install git ros-kinetic-joy ros-kinetic-robot-localization ros-kinetic-geodesy  python-skimage ros-kinetic-robot-localization ros-kinetic-geodesy libopencv-dev ros-kinetic-ompl ros-kinetic-base-local-planner ros-kinetic-costmap-converter ros-kinetic-teb-local-planner  libgoogle-glog-dev libgflags-dev ros-kinetic-driver-base ros-kinetic-can-msgs
-sudo apt-get -y install openssh-server
+# edit bashrc
+if [ "$5" == "bash" ]; then
+  echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+  echo "source ~/nullmax_pilot/devel/setup.bash" >> ~/.bashrc
+  echo "export DW_MAJOR_VERSION=1" >> ~/.bashrc
+  echo "export DW_MINOR_VERSION=2" >> ~/.bashrc
 
-echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
-echo "source ~/nullmax_pilot/devel/setup.bash" >> ~/.bashrc
-echo "export DW_MAJOR_VERSION=1" >> ~/.bashrc
-echo "export DW_MINOR_VERSION=2" >> ~/.bashrc
+  if [ "$1" == "a" ] ; then
+    #tegra-a
+    echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
+    echo "export ROS_IP=10.42.0.28" >> ~/.bashrc
+  elif [ "$1" == "b" ]; then
+    #tegra-b
+    echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
+    echo "export ROS_IP=10.42.0.29" >> ~/.bashrc
+    echo "cd ~/nullmax_pilot" >> ~/.bashrc
+    echo "bash ./scripts/setup_canbus.sh 1" >> ~/.bashrc
+    echo "roslaunch esr_mobileye_node esr_mobileye_node.launch " >> ~/.bashrc
+  fi
 
-if [ "$1" == "a" ]; then
-  #tegra-a
+fi
 
-  echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
-  echo "export ROS_IP=10.42.0.28" >> ~/.bashrc
-
+# generate ssh key to tegra-b
+if [ "$1" == "a" ] && [ "$4" == "ssh" ]; then
   ssh-keygen -t rsa
 
   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
   scp ~/.ssh/authorized_keys ubuntu@tegra-b:~/.ssh/
-
-  sudo rm /etc/hostname
-  sudo su
-  sudo echo "tegra-a" >> /etc/hostname
-  command exit
-
-elif [ "$1" == "b" ]; then
-  #tegra-b
-  
-  echo "export ROS_MASTER_URI=http://tegra-b:11311" >> ~/.bashrc
-  echo "export ROS_IP=10.42.0.29" >> ~/.bashrc
-  echo "cd ~/nullmax_pilot" >> ~/.bashrc
-  echo "bash ./scripts/setup_canbus.sh 1" >> ~/.bashrc
-  echo "roslaunch esr_mobileye_node esr_mobileye_node.launch " >> ~/.bashrc
-
-  sudo rm /etc/hostname
-  sudo su
-  sudo echo "tegra-b" >> /etc/hostname
-  command exit
 fi
-
-
 
