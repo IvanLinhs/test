@@ -1,12 +1,15 @@
 #!/bin/bash
-if [ $# != 5 ]; then
+if [ $# != 6 ]; then
   echo "Usage: "
-  echo "./install_px2.sh [a|b] [install|no_install] [host|no_host] [ssh|no_ssh] [bash|no_bash]"
+  echo "./install_px2.sh [a|b] [sources|no_sources] [install|no|no_update_install] [host|no_host] [ssh|no_ssh] [bash|no_bash]"
 fi
 
-# edit sources.list and install all package
-if [ "$2" == "install" ]; then
-  sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
+#edit sources.list 
+function edit_sources_list(){
+  if [ "$1" == "backup" ]; then
+    sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
+  fi
+
   sudo rm /etc/apt/sources.list
 
   sudo echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
@@ -15,38 +18,52 @@ if [ "$2" == "install" ]; then
   sudo echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
 
   sudo sh -c '. /etc/lsb-release && echo "deb http://mirrors.ustc.edu.cn/ros/ubuntu/ $DISTRIB_CODENAME main" > /etc/apt/sources.list.d/ros-latest.list'
-                
-  sudo apt-get update
+}
 
-  sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+# install all package
+function install_all(){
+  if [ "$1" == "install" ]; then 
+    sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+    sudo apt-get update
+  fi
 
   sudo apt-get -y install libssl1.0.0/xenial libssl-doc/xenial libssl-dev/xenial
   sudo apt-get -y install ros-kinetic-desktop-full
 
   sudo apt-get -y install git ros-kinetic-joy ros-kinetic-robot-localization ros-kinetic-geodesy  python-skimage ros-kinetic-robot-localization ros-kinetic-geodesy libopencv-dev ros-kinetic-ompl ros-kinetic-base-local-planner ros-kinetic-costmap-converter ros-kinetic-teb-local-planner  libgoogle-glog-dev libgflags-dev ros-kinetic-driver-base ros-kinetic-can-msgs
   sudo apt-get -y install openssh-server
-fi
 
-# edit hosts and hostname
-if [ "$3" == "host" ]; then
+  init_ros
+}
+
+# init ros
+function init_ros(){
+  sudo rosdep init
+  rosdep update
+  echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+}
+
+# add hosts
+function add_hosts(){
+  sudo sed '/tegra-a/'d /etc/hosts
   sudo echo "10.42.0.28 tegra-a" >> /etc/hosts
+  sudo sed '/tegra-b/'d /etc/hosts
   sudo echo "10.42.0.29 tegra-b" >> /etc/hosts
+}
 
+# edit hostname
+function edit_hostname(){
   if [ "$1" == "a" ]; then
-    sudo rm /etc/hostname
-    sudo su
-    sudo echo "tegra-a" >> /etc/hostname
-    command exit
+    sudo sed 's/tegra-ubuntu/tegra-a/g' /etc/hostname
   elif [ "$1" == "b" ]; then
-    sudo rm /etc/hostname
-    sudo su
-    sudo echo "tegra-b" >> /etc/hostname
-    command exit
-fi
+    sudo sed 's/tegra-ubuntu/tegra-b/g' /etc/hostname
+  fi
+}
+
 
 # edit bashrc
-if [ "$5" == "bash" ]; then
-  echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+function edit_bash(){
+  
   echo "source ~/nullmax_pilot/devel/setup.bash" >> ~/.bashrc
   echo "export DW_MAJOR_VERSION=1" >> ~/.bashrc
   echo "export DW_MINOR_VERSION=2" >> ~/.bashrc
@@ -63,14 +80,35 @@ if [ "$5" == "bash" ]; then
     echo "bash ./scripts/setup_canbus.sh 1" >> ~/.bashrc
     echo "roslaunch esr_mobileye_node esr_mobileye_node.launch " >> ~/.bashrc
   fi
+}
 
-fi
+# edit bashrc
 
 # generate ssh key to tegra-b
-if [ "$1" == "a" ] && [ "$4" == "ssh" ]; then
+function gen_sshkey(){
   ssh-keygen -t rsa
 
   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-  scp ~/.ssh/authorized_keys ubuntu@tegra-b:~/.ssh/
+  scp ~/.ssh/authorized_keys ubuntu@tegra-b:~/.ssh
+}
+
+if [ "$2" == "sources" ]; then
+  edit_sources_list
 fi
 
+if [ "$3" == "install" ] || [ "$3" == "no_update_install" ]; then
+  install_all "$3"
+fi
+
+if [ "$4" == "host" ]; then
+  add_hosts
+  edit_hostname "$1"
+fi
+
+if [ "$1" == "a" ] && [ "$5" == "ssh" ]; then
+  gen_sshkey
+fi
+
+if [ "$6" == "bash" ]; then
+  edit_bash "$1"
+fi
