@@ -32,7 +32,8 @@ function install_all(){
 
   sudo apt-get -y install git ros-kinetic-joy ros-kinetic-robot-localization ros-kinetic-geodesy  python-skimage ros-kinetic-robot-localization ros-kinetic-geodesy libopencv-dev ros-kinetic-ompl ros-kinetic-base-local-planner ros-kinetic-costmap-converter ros-kinetic-teb-local-planner  libgoogle-glog-dev libgflags-dev ros-kinetic-driver-base ros-kinetic-can-msgs
   sudo apt-get -y install openssh-server
-
+  mkdir ~/.ssh
+  
   init_ros
 }
 
